@@ -46,5 +46,16 @@ func main() {
 	DBP.LabelAdd("Label Two")
 	DBP.LabelAdd("Label three")
 	labels := DBP.LabelList()
-	fmt.Println("Labels:", labels)
+	fmt.Println("\tId\tLabel")
+	for _, l := range labels {
+		fmt.Printf("\t%02d\t\"%s\"\n", l.Id, l.Name)
+	}
+	fmt.Println("Deleete first label:", DBP.LabelDelete(labels[0].Id))
+	fmt.Println("Deleete first label (already deleted):", DBP.LabelDelete(labels[0].Id))
+	labels = DBP.LabelList()
+	fmt.Println("\tId\tLabel")
+	for _, l := range labels {
+		fmt.Printf("\t%02d\t\"%s\"\n", l.Id, l.Name)
+	}
+
 }
