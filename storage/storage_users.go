@@ -6,10 +6,11 @@ type User struct {
 }
 
 type DBPoolUserIface interface {
-	UserAdd(name string) *User            // C
-	UserFindById(id int) *User            // R
-	UserNewName(id int, name string) bool // U
-	UserDeleteById(id int) bool           // D
+	UserAdd(name string) *User
+	UserFindById(id int) *User
+	UserNewName(id int, name string) bool
+	UserDeleteById(id int) bool
+	UserList() []*User
 }
 
 func (d *DBPool) UserAdd(name string) *User {
@@ -63,4 +64,26 @@ func (d *DBPool) UserDeleteById(id int) bool {
 		return true
 	}
 	return false
+}
+
+func (d *DBPool) UserList() []*User {
+	rv := make([]*User, 0)
+	r, err := d.db.Query(d.ctx, "SELECT id,name FROM users")
+	if err != nil {
+		return rv
+	}
+
+	for r.Next() {
+		var u User
+		err = r.Scan(
+			&u.Id,
+			&u.Name,
+		)
+		if err != nil {
+			return rv
+		}
+		rv = append(rv, &u)
+	}
+
+	return rv
 }
