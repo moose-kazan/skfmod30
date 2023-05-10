@@ -15,6 +15,7 @@ type DBPoolTaskIface interface {
 	TaskFindById(id int) *Task
 	TaskClose(id int) bool
 	TaskDeleteById(id int) bool
+	TaskList() []*Task
 }
 
 func (d *DBPool) TaskAdd(t Task) *Task {
@@ -65,7 +66,7 @@ func (d *DBPool) TaskFindById(id int) *Task {
 }
 
 func (d *DBPool) TaskClose(id int) bool {
-	r, err := d.db.Query(d.ctx, "UPDATE tasks SET closed = EXTRACET(EXPOCH FROM NOW()) WHERE id = $1 RETURNING id", id)
+	r, err := d.db.Query(d.ctx, "UPDATE tasks SET closed = EXTRACT(EPOCH FROM NOW()) WHERE id = $1 RETURNING id", id)
 	if err != nil {
 		return false
 	}
@@ -84,4 +85,31 @@ func (d *DBPool) TaskDeleteById(id int) bool {
 		return true
 	}
 	return false
+}
+
+func (d *DBPool) TaskList() []*Task {
+	rv := make([]*Task, 0)
+	r, err := d.db.Query(d.ctx, "SELECT id,opened,closed,author_id,assigned_id,title,content FROM tasks")
+	if err != nil {
+		return rv
+	}
+
+	for r.Next() {
+		var t Task
+		err = r.Scan(
+			&t.Id,
+			&t.Opened,
+			&t.Closed,
+			&t.AuthorId,
+			&t.AssignedId,
+			&t.Title,
+			&t.Content,
+		)
+		if err != nil {
+			return rv
+		}
+		rv = append(rv, &t)
+	}
+
+	return rv
 }
