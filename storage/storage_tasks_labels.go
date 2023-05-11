@@ -1,5 +1,7 @@
 package storage
 
+import "fmt"
+
 type TaskLabel struct {
 	TaskId  int
 	LabelId int
@@ -14,7 +16,7 @@ type DBPoolTaskLabelIface interface {
 
 // TODO: Disable duplicate entries!
 func (d *DBPool) TaskLabelAssign(task_id int, label_id int) bool {
-	err := d.db.QueryRow(d.ctx, "INSERT INTO tasks_labels (task_id, label_id) VALUES ($1, $2) RETURNING id", task_id, label_id).Scan(&task_id)
+	err := d.db.QueryRow(d.ctx, "INSERT INTO tasks_labels (task_id, label_id) VALUES ($1, $2) RETURNING task_id,label_id", task_id, label_id).Scan(&task_id, &label_id)
 	if err != nil {
 		return false
 	}
@@ -58,12 +60,10 @@ func (d *DBPool) TaskLabelAssignedForTask(task_id int) []int {
 }
 
 func (d *DBPool) TaskLabelRemove(task_id int, label_id int) bool {
-	r, err := d.db.Query(d.ctx, "DELETE FROM tasks_labels WHERE task_id = $1 AND label_id = $2 RETURNING task_id, label_id", task_id, label_id)
+	err := d.db.QueryRow(d.ctx, "DELETE FROM tasks_labels WHERE task_id = $1 AND label_id = $2 RETURNING task_id, label_id", task_id, label_id).Scan(&task_id, &label_id)
+	fmt.Println("Hi!")
 	if err != nil {
 		return false
 	}
-	if r.Next() {
-		return true
-	}
-	return false
+	return true
 }
